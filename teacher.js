@@ -135,8 +135,10 @@ window.TeacherApp = {
       s.gameState='waiting'; s.currentStage=1;
       s.teams = window.GAME_DATA.makeDefaultTeams();
     });
-  }
+  },
   _renderRanking(s) {
+
+
     const sorted = Object.values(s.teams)
       .filter(t => t.online)
       .sort((a, b) => a.totalTime - b.totalTime);
