@@ -13,6 +13,12 @@ window.TeacherApp = {
     const s = this.st;
     if (!s) { this.el.innerHTML = '<div class="setup-container"><h1>연결 중...</h1></div>'; return; }
 
+    // 순위 화면 (교사/학생 공통)
+    if (s.gameState === 'ranking') {
+      this._renderRanking(s);
+      return;
+    }
+
     const { gameState: gs, currentStage: cs, teams } = s;
     const tList = Object.values(teams);
     const online = tList.filter(t => t.online);
@@ -50,7 +56,7 @@ window.TeacherApp = {
     /* ── 버튼 ── */
     const dis = (b) => b ? 'disabled' : '';
     const rankingBtn = cs === 4
-      ? `<button class="start-btn" ${dis(!allDone)} onclick="TA.showRanking()">최종 순위 보기</button>`
+      ? `<button class="start-btn" ${dis(!allDone || gs==='ranking')} onclick="TA.showRanking()">최종 순위 보기</button>`
       : `<button ${dis(!allDone)} onclick="TA.nextStage()">다음 단계로 (${cs+1}단계) →</button>`;
 
     const endOrBack = gs === 'ranking'
@@ -129,6 +135,30 @@ window.TeacherApp = {
       s.gameState='waiting'; s.currentStage=1;
       s.teams = window.GAME_DATA.makeDefaultTeams();
     });
+  }
+  _renderRanking(s) {
+    const sorted = Object.values(s.teams)
+      .filter(t => t.online)
+      .sort((a, b) => a.totalTime - b.totalTime);
+
+    const medal = ['🥇','🥈','🥉'];
+    const rows = sorted.map((t, i) => {
+      const isTop = i < 3;
+      return `
+        <div class="ranking-item" style="${isTop ? 'border:2px solid #f59e0b;' : ''}">
+          <span class="rank" style="font-size:${isTop?'2rem':'1.4rem'}">${medal[i] || (i+1)+'위'}</span>
+          <span class="name" style="font-size:1.3rem;font-weight:700">${t.name}</span>
+          <span class="time" style="color:#3b82f6;font-weight:700">${t.totalTime >= 999 ? 'TIME OVER' : t.totalTime+'초'}</span>
+        </div>`;
+    }).join('');
+
+    this.el.innerHTML = `
+      <div class="setup-container ranking-container" style="background:linear-gradient(135deg,#f0f4ff,#e8edf5);min-height:100vh;padding:2rem;">
+        <h1 style="font-size:2.5rem;margin-bottom:0.5rem">🏆 최종 순위 🏆</h1>
+        <p style="color:#64748b;margin-bottom:2rem">학생들 화면에도 동일한 순위가 표시됩니다.</p>
+        <div class="ranking-list">${rows}</div>
+        <button class="start-btn" style="margin-top:2.5rem;font-size:1.1rem;padding:0.8rem 2.5rem" onclick="TA.backToGame()">← 대시보드로 돌아가기</button>
+      </div>`;
   }
 };
 
